@@ -17,4 +17,5 @@ export 'src/renderers/icon_node_renderer.dart';
 export 'src/renderers/animated_line_renderer.dart';
 export 'src/renderers/ellipse_group_renderer.dart';
 
-// Presets are exported in Chunk 7 after they exist.
+export 'src/presets/preset_data.dart';
+export 'src/presets/cloud_network_view.dart';
