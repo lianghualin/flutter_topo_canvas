@@ -7,6 +7,7 @@ import '../util/svg_cache.dart';
 import '../util/viewport_math.dart';
 import 'topo_types.dart';
 import 'topo_controller.dart';
+import 'topo_toolbar.dart';
 import 'render_context.dart';
 
 class TopologyCanvas<TNode, TEdge> extends StatefulWidget {
@@ -62,9 +63,15 @@ class _TopologyCanvasState<TNode, TEdge>
   final TransformationController _xform = TransformationController();
   Size _lastViewport = const Size(800, 600);
 
+  late final TopoCanvasController _ownedController;
+
+  TopoCanvasController get _effectiveController =>
+      widget.controller ?? _ownedController;
+
   @override
   void initState() {
     super.initState();
+    _ownedController = widget.controller ?? TopoCanvasController();
     _ticker = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -72,8 +79,8 @@ class _TopologyCanvasState<TNode, TEdge>
     _runLayout();
     SvgCache.preloadBuiltInAssets();
 
-    widget.controller?.attachFitViewHandler(_fitView);
-    widget.controller?.attachRefreshHandler(() => setState(_runLayout));
+    _effectiveController.attachFitViewHandler(_fitView);
+    _effectiveController.attachRefreshHandler(() => setState(_runLayout));
 
     if (widget.autoFitOnFirstBuild) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _fitView());
@@ -128,12 +135,13 @@ class _TopologyCanvasState<TNode, TEdge>
     _xform.value = Matrix4.identity()
       ..translateByDouble(offset.dx, offset.dy, 0, 1)
       ..scaleByDouble(scale, scale, 1, 1);
-    widget.controller?.updateViewport(scale: scale, offset: offset);
+    _effectiveController.updateViewport(scale: scale, offset: offset);
   }
 
   @override
   void dispose() {
-    widget.controller?.detach();
+    _effectiveController.detach();
+    if (widget.controller == null) _ownedController.dispose();
     _ticker.dispose();
     _xform.dispose();
     super.dispose();
@@ -146,7 +154,7 @@ class _TopologyCanvasState<TNode, TEdge>
         _lastViewport = Size(constraints.maxWidth, constraints.maxHeight);
         final contentBounds = boundsOfPositions(_positions);
 
-        return InteractiveViewer(
+        final viewer = InteractiveViewer(
           transformationController: _xform,
           minScale: widget.minScale,
           maxScale: widget.maxScale,
@@ -154,7 +162,7 @@ class _TopologyCanvasState<TNode, TEdge>
           constrained: false,
           onInteractionUpdate: (_) {
             final m = _xform.value;
-            widget.controller?.updateViewport(
+            _effectiveController.updateViewport(
               scale: m.getMaxScaleOnAxis(),
               offset: Offset(m.getTranslation().x, m.getTranslation().y),
             );
@@ -184,6 +192,17 @@ class _TopologyCanvasState<TNode, TEdge>
               ],
             ),
           ),
+        );
+
+        return Stack(
+          children: [
+            viewer,
+            if (widget.showToolbar)
+              TopoToolbar(
+                controller: _effectiveController,
+                extras: widget.toolbarExtras ?? const [],
+              ),
+          ],
         );
       },
     );
