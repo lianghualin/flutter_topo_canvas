@@ -59,6 +59,8 @@ class _TopologyCanvasState<TNode, TEdge>
     with SingleTickerProviderStateMixin {
   Map<String, Offset> _positions = const {};
   late AnimationController _ticker;
+  final TransformationController _xform = TransformationController();
+  Size _lastViewport = const Size(800, 600);
 
   @override
   void initState() {
@@ -69,6 +71,13 @@ class _TopologyCanvasState<TNode, TEdge>
     )..repeat();
     _runLayout();
     SvgCache.preloadBuiltInAssets();
+
+    widget.controller?.attachFitViewHandler(_fitView);
+    widget.controller?.attachRefreshHandler(() => setState(_runLayout));
+
+    if (widget.autoFitOnFirstBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fitView());
+    }
   }
 
   @override
@@ -97,14 +106,36 @@ class _TopologyCanvasState<TNode, TEdge>
       nodeIds: widget.nodes.map((n) => n.id).toList(),
       edges: widget.edges.map((e) => (e.fromNodeId, e.toNodeId)).toList(),
       groups: widget.groups,
-      viewport: const Size(800, 600), // replaced in Task 17 when viewport known
+      viewport: _lastViewport,
     );
     _positions = {...computed, ...explicit};
   }
 
+  void _fitView() {
+    final bounds = boundsOfPositions(_positions);
+    if (bounds == Rect.zero) return;
+
+    final scale = fitViewScale(
+      contentSize: bounds.size,
+      viewportSize: _lastViewport,
+    );
+    final offset = fitViewOffset(
+      contentBounds: bounds,
+      viewportSize: _lastViewport,
+      scale: scale,
+    );
+
+    _xform.value = Matrix4.identity()
+      ..translateByDouble(offset.dx, offset.dy, 0, 1)
+      ..scaleByDouble(scale, scale, 1, 1);
+    widget.controller?.updateViewport(scale: scale, offset: offset);
+  }
+
   @override
   void dispose() {
+    widget.controller?.detach();
     _ticker.dispose();
+    _xform.dispose();
     super.dispose();
   }
 
@@ -112,15 +143,47 @@ class _TopologyCanvasState<TNode, TEdge>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final viewport = Size(constraints.maxWidth, constraints.maxHeight);
+        _lastViewport = Size(constraints.maxWidth, constraints.maxHeight);
         final contentBounds = boundsOfPositions(_positions);
 
-        return Stack(
-          children: [
-            _buildEdgeLayer(contentBounds, viewport),
-            _buildGroupLayer(contentBounds, viewport),
-            _buildNodeLayer(viewport),
-          ],
+        return InteractiveViewer(
+          transformationController: _xform,
+          minScale: widget.minScale,
+          maxScale: widget.maxScale,
+          boundaryMargin: const EdgeInsets.all(2000),
+          constrained: false,
+          onInteractionUpdate: (_) {
+            final m = _xform.value;
+            widget.controller?.updateViewport(
+              scale: m.getMaxScaleOnAxis(),
+              offset: Offset(m.getTranslation().x, m.getTranslation().y),
+            );
+          },
+          child: SizedBox(
+            width: 4000,
+            height: 4000,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: 2000,
+                  top: 2000,
+                  child: SizedBox(
+                    width: 1,
+                    height: 1,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        _buildEdgeLayer(contentBounds, _lastViewport),
+                        _buildGroupLayer(contentBounds, _lastViewport),
+                        _buildNodeLayer(_lastViewport),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -163,6 +226,7 @@ class _TopologyCanvasState<TNode, TEdge>
 
   Widget _buildNodeLayer(Size viewport) {
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         for (final node in widget.nodes)
           Positioned(
@@ -177,9 +241,9 @@ class _TopologyCanvasState<TNode, TEdge>
                 node,
                 RenderContext(
                   animationValue: _ticker.value,
-                  scale: 1.0,
+                  scale: _xform.value.getMaxScaleOnAxis(),
                   isHovered: false,
-                  transform: Matrix4.identity(),
+                  transform: _xform.value,
                   repaintTrigger: () => setState(() {}),
                 ),
               ),
