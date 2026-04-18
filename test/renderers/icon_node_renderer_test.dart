@@ -12,7 +12,7 @@ void main() {
         label: (node) => 'L-${node.id}',
         package: 'flutter_topo_canvas',
       );
-      final node = TopoNode<String>(id: 'n1', data: 'assets/images/switch_float.svg');
+      const node = TopoNode<String>(id: 'n1', data: 'assets/images/switch_float.svg');
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -35,7 +35,7 @@ void main() {
         label: (_) => '',
         size: const Size(120, 90),
       );
-      expect(renderer.sizeFor(TopoNode(id: 'n1', data: 'x')), const Size(120, 90));
+      expect(renderer.sizeFor(const TopoNode(id: 'n1', data: 'x')), const Size(120, 90));
     });
   });
 }

@@ -4,18 +4,18 @@ import 'package:flutter_topo_canvas/flutter_topo_canvas.dart';
 
 void main() {
   testWidgets('SwitchRelationView renders switches', (tester) async {
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(const MaterialApp(
       home: Scaffold(
         body: SizedBox(
           width: 800,
           height: 600,
           child: SwitchRelationView(
-            switches: const [
+            switches: [
               SwitchNode(name: 'sw-1'),
               SwitchNode(name: 'sw-2'),
               SwitchNode(name: 'sw-err', isAbnormal: true),
             ],
-            connections: const [
+            connections: [
               SwitchEdge(fromSwitchName: 'sw-1', toSwitchName: 'sw-2'),
               SwitchEdge(fromSwitchName: 'sw-2', toSwitchName: 'sw-err'),
             ],
@@ -31,18 +31,18 @@ void main() {
   });
 
   testWidgets('SwitchRelationView survives a graph with a cycle', (tester) async {
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(const MaterialApp(
       home: Scaffold(
         body: SizedBox(
           width: 800,
           height: 600,
           child: SwitchRelationView(
-            switches: const [
+            switches: [
               SwitchNode(name: 'a'),
               SwitchNode(name: 'b'),
               SwitchNode(name: 'c'),
             ],
-            connections: const [
+            connections: [
               SwitchEdge(fromSwitchName: 'a', toSwitchName: 'b'),
               SwitchEdge(fromSwitchName: 'b', toSwitchName: 'c'),
               SwitchEdge(fromSwitchName: 'c', toSwitchName: 'a'),

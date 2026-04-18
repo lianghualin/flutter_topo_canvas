@@ -48,8 +48,8 @@ class CloudNetworkDemo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CloudNetworkView(
-      domains: const [
+    return const CloudNetworkView(
+      domains: [
         CloudDomain(
           name: 'root',
           isRoot: true,
@@ -67,7 +67,7 @@ class CloudNetworkDemo extends StatelessWidget {
           ],
         ),
       ],
-      connections: const [
+      connections: [
         CloudEdge(fromNetworkName: 'vpc-a', toNetworkName: 'edge-1'),
         CloudEdge(fromNetworkName: 'vpc-b', toNetworkName: 'edge-2'),
       ],
@@ -80,8 +80,8 @@ class SwitchRelationDemo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SwitchRelationView(
-      switches: const [
+    return const SwitchRelationView(
+      switches: [
         SwitchNode(name: 'core-1'),
         SwitchNode(name: 'core-2'),
         SwitchNode(name: 'agg-1'),
@@ -91,7 +91,7 @@ class SwitchRelationDemo extends StatelessWidget {
         SwitchNode(name: 'tor-err', isAbnormal: true),
         SwitchNode(name: 'tor-4'),
       ],
-      connections: const [
+      connections: [
         SwitchEdge(fromSwitchName: 'core-1', toSwitchName: 'agg-1'),
         SwitchEdge(fromSwitchName: 'core-2', toSwitchName: 'agg-2'),
         SwitchEdge(fromSwitchName: 'agg-1', toSwitchName: 'tor-1'),
@@ -111,19 +111,19 @@ class RawCanvasDemo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TopologyCanvas<String, String>(
-      nodes: const [
+    return const TopologyCanvas<String, String>(
+      nodes: [
         TopoNode(id: 'a', data: 'Alpha'),
         TopoNode(id: 'b', data: 'Beta'),
         TopoNode(id: 'c', data: 'Gamma'),
       ],
-      edges: const [
+      edges: [
         TopoEdge(id: 'ab', fromNodeId: 'a', toNodeId: 'b', data: ''),
         TopoEdge(id: 'bc', fromNodeId: 'b', toNodeId: 'c', data: ''),
       ],
-      layout: const HierarchicalLayout(rootNodeId: 'a'),
-      nodeRenderer: const _CircleNodeRenderer(),
-      edgeRenderer: const AnimatedLineRenderer<String>(),
+      layout: HierarchicalLayout(rootNodeId: 'a'),
+      nodeRenderer: _CircleNodeRenderer(),
+      edgeRenderer: AnimatedLineRenderer<String>(),
     );
   }
 }

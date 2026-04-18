@@ -4,20 +4,20 @@ import 'package:flutter_topo_canvas/flutter_topo_canvas.dart';
 
 void main() {
   testWidgets('CloudNetworkView renders domain networks', (tester) async {
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(const MaterialApp(
       home: Scaffold(
         body: SizedBox(
           width: 800,
           height: 600,
           child: CloudNetworkView(
-            domains: const [
+            domains: [
               CloudDomain(
                 name: 'root',
                 isRoot: true,
                 networks: [CloudNetwork(name: 'net-a'), CloudNetwork(name: 'net-b')],
               ),
             ],
-            connections: const [CloudEdge(fromNetworkName: 'net-a', toNetworkName: 'net-b')],
+            connections: [CloudEdge(fromNetworkName: 'net-a', toNetworkName: 'net-b')],
             showToolbar: false,
           ),
         ),
@@ -30,20 +30,20 @@ void main() {
 
   testWidgets('showGroups: false hides domain ellipse but still renders nodes',
       (tester) async {
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(const MaterialApp(
       home: Scaffold(
         body: SizedBox(
           width: 800,
           height: 600,
           child: CloudNetworkView(
-            domains: const [
+            domains: [
               CloudDomain(
                 name: 'root',
                 isRoot: true,
                 networks: [CloudNetwork(name: 'n1')],
               ),
             ],
-            connections: const [],
+            connections: [],
             showGroups: false,
             showToolbar: false,
           ),

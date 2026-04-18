@@ -6,7 +6,7 @@ import 'package:flutter_topo_canvas/src/layout/ellipse_group_layout.dart';
 void main() {
   group('EllipseGroupLayout', () {
     test('throws if rootDomainId not in groups', () {
-      final layout = EllipseGroupLayout(rootDomainId: 'missing');
+      const layout = EllipseGroupLayout(rootDomainId: 'missing');
       expect(
         () => layout.computePositions(
           nodeIds: const ['n1'],
@@ -19,7 +19,7 @@ void main() {
     });
 
     test('single group: nodes centred along horizontal midline', () {
-      final layout = EllipseGroupLayout(rootDomainId: 'g1', nodeSpacing: 100);
+      const layout = EllipseGroupLayout(rootDomainId: 'g1', nodeSpacing: 100);
       final pos = layout.computePositions(
         nodeIds: const ['n1', 'n2', 'n3'],
         edges: const [],
@@ -32,7 +32,7 @@ void main() {
     });
 
     test('single node in group is centred', () {
-      final layout = EllipseGroupLayout(rootDomainId: 'g1');
+      const layout = EllipseGroupLayout(rootDomainId: 'g1');
       final pos = layout.computePositions(
         nodeIds: const ['solo'],
         edges: const [],
@@ -43,7 +43,7 @@ void main() {
     });
 
     test('two domains: root domain above child domain', () {
-      final layout = EllipseGroupLayout(rootDomainId: 'g1', domainSpacing: 80);
+      const layout = EllipseGroupLayout(rootDomainId: 'g1', domainSpacing: 80);
       final pos = layout.computePositions(
         nodeIds: const ['n1', 'n2'],
         edges: const [('n1', 'n2')],
@@ -58,7 +58,7 @@ void main() {
     });
 
     test('orphan nodes (not in any group) placed at origin fallback', () {
-      final layout = EllipseGroupLayout(rootDomainId: 'g1');
+      const layout = EllipseGroupLayout(rootDomainId: 'g1');
       final pos = layout.computePositions(
         nodeIds: const ['n1', 'orphan'],
         edges: const [],

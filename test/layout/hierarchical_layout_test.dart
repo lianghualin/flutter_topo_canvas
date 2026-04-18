@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_topo_canvas/src/core/topo_types.dart';
 import 'package:flutter_topo_canvas/src/layout/hierarchical_layout.dart';
 
 void main() {
   group('HierarchicalLayout', () {
     test('throws if rootNodeId not in node list', () {
-      final layout = HierarchicalLayout(rootNodeId: 'missing');
+      const layout = HierarchicalLayout(rootNodeId: 'missing');
       expect(
         () => layout.computePositions(
           nodeIds: const ['a', 'b'],
@@ -19,7 +18,7 @@ void main() {
     });
 
     test('single-node tree: root at origin', () {
-      final layout = HierarchicalLayout(rootNodeId: 'a');
+      const layout = HierarchicalLayout(rootNodeId: 'a');
       final pos = layout.computePositions(
         nodeIds: const ['a'],
         edges: const [],
@@ -30,7 +29,7 @@ void main() {
     });
 
     test('three-level chain: each child is one levelGap below parent', () {
-      final layout = HierarchicalLayout(
+      const layout = HierarchicalLayout(
         rootNodeId: 'a',
         levelGap: 100,
         siblingGap: 80,
@@ -47,7 +46,7 @@ void main() {
     });
 
     test('siblings at same level share y and are separated by siblingGap', () {
-      final layout = HierarchicalLayout(
+      const layout = HierarchicalLayout(
         rootNodeId: 'a',
         levelGap: 100,
         siblingGap: 80,
@@ -64,7 +63,7 @@ void main() {
     });
 
     test('graph with cycle: layout completes without hanging', () {
-      final layout = HierarchicalLayout(rootNodeId: 'a');
+      const layout = HierarchicalLayout(rootNodeId: 'a');
       final pos = layout.computePositions(
         nodeIds: const ['a', 'b', 'c'],
         edges: const [('a', 'b'), ('b', 'c'), ('c', 'a')],
@@ -78,7 +77,7 @@ void main() {
     });
 
     test('self-loop on root is ignored for level assignment', () {
-      final layout = HierarchicalLayout(rootNodeId: 'a');
+      const layout = HierarchicalLayout(rootNodeId: 'a');
       final pos = layout.computePositions(
         nodeIds: const ['a', 'b'],
         edges: const [('a', 'a'), ('a', 'b')],
@@ -94,7 +93,7 @@ void main() {
       final edges = <(String, String)>[
         for (var i = 0; i < ids.length; i++) (ids[i], ids[(i + 1) % ids.length]),
       ];
-      final layout = HierarchicalLayout(rootNodeId: 'n0');
+      const layout = HierarchicalLayout(rootNodeId: 'n0');
       final pos = layout.computePositions(
         nodeIds: ids,
         edges: edges,
@@ -105,7 +104,7 @@ void main() {
     });
 
     test('disconnected nodes placed at level 0', () {
-      final layout = HierarchicalLayout(rootNodeId: 'a');
+      const layout = HierarchicalLayout(rootNodeId: 'a');
       final pos = layout.computePositions(
         nodeIds: const ['a', 'b', 'island'],
         edges: const [('a', 'b')],
@@ -117,7 +116,7 @@ void main() {
     });
 
     test('every node gets a position', () {
-      final layout = HierarchicalLayout(rootNodeId: 'root');
+      const layout = HierarchicalLayout(rootNodeId: 'root');
       final pos = layout.computePositions(
         nodeIds: const ['root', 'a', 'b', 'c', 'd'],
         edges: const [('root', 'a'), ('root', 'b'), ('b', 'c')],
