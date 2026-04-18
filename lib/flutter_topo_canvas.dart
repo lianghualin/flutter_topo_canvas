@@ -19,3 +19,4 @@ export 'src/renderers/ellipse_group_renderer.dart';
 
 export 'src/presets/preset_data.dart';
 export 'src/presets/cloud_network_view.dart';
+export 'src/presets/switch_relation_view.dart';
