@@ -103,5 +103,30 @@ void main() {
       );
       expect(pos.length, 10);
     });
+
+    test('disconnected nodes placed at level 0', () {
+      final layout = HierarchicalLayout(rootNodeId: 'a');
+      final pos = layout.computePositions(
+        nodeIds: const ['a', 'b', 'island'],
+        edges: const [('a', 'b')],
+        groups: const [],
+        viewport: const Size(800, 600),
+      );
+      expect(pos.length, 3);
+      expect(pos['island']!.dy, 0, reason: 'isolated nodes default to level 0');
+    });
+
+    test('every node gets a position', () {
+      final layout = HierarchicalLayout(rootNodeId: 'root');
+      final pos = layout.computePositions(
+        nodeIds: const ['root', 'a', 'b', 'c', 'd'],
+        edges: const [('root', 'a'), ('root', 'b'), ('b', 'c')],
+        groups: const [],
+        viewport: const Size(800, 600),
+      );
+      for (final id in ['root', 'a', 'b', 'c', 'd']) {
+        expect(pos[id], isNotNull, reason: 'missing position for $id');
+      }
+    });
   });
 }
