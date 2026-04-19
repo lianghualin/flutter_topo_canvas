@@ -1,6 +1,6 @@
 name: flutter_topo_canvas
 description: Generic topology canvas with pluggable layouts and renderers. Ships CloudNetworkView and SwitchRelationView presets.
-version: 0.1.0
+version: 1.0.0
 homepage: https://github.com/lianghualin/flutter_topo_canvas
 repository: https://github.com/lianghualin/flutter_topo_canvas
 issue_tracker: https://github.com/lianghualin/flutter_topo_canvas/issues

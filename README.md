@@ -9,6 +9,8 @@ A generic topology canvas with pluggable layouts and renderers. Ships two ready-
 - **Generic core** — `TopologyCanvas<TNode, TEdge>` takes any node/edge data.
 - **Pluggable layout** — abstract `TopologyLayout`; built-in `HierarchicalLayout` (handles cycles) and `EllipseGroupLayout`.
 - **Pluggable renderers** — `NodeRenderer`, `EdgeRenderer`, `GroupRenderer` interfaces; built-in icon + animated-line + ellipse-group renderers.
+- **Canvas-drawn device icons** — `DeviceIconNodeRenderer` uses [`topology_view_icons`](https://pub.dev/packages/topology_view_icons). No asset bundling, crisp at any zoom.
+- **Hover-float + silhouette shadow** — configurable lift and drop-shadow on pointer hover (web/desktop). Tunable per renderer.
 - **Pan / zoom / fit-view** — via `InteractiveViewer`, with a default toolbar and an imperative `TopoCanvasController`.
 - **Decorative groups** — optional boundaries around node subsets. Toggle on/off without affecting layout.
 
@@ -63,6 +65,55 @@ TopologyCanvas<MyNode, MyEdge>(
 );
 ```
 
+## Device icons (`DeviceIconNodeRenderer`)
+
+Draw any of the device shapes from [`topology_view_icons`](https://pub.dev/packages/topology_view_icons) without bundling SVGs.
+
+```dart
+TopologyCanvas<MyNode, MyEdge>(
+  nodes: nodes,
+  edges: edges,
+  layout: const HierarchicalLayout(rootNodeId: 'root'),
+  nodeRenderer: DeviceIconNodeRenderer<MyNode>(
+    deviceType: (n) => TopoDeviceType.switch_,
+    isError:    (n) => n.data.down,
+    label:      (n) => n.data.name,
+    size:       const Size(80, 80),
+    style:      TopoIconStyle.lnm,
+    hoverFloat:    true,
+    liftDistance:  2.0,   // px up on hover
+    shadowBlur:    8.0,   // sigma at peak
+    shadowOffset:  4.0,   // y-drop at peak
+    shadowOpacity: 0.20,  // at peak, linearly scaled by hover progress
+  ),
+  edgeRenderer: const AnimatedLineRenderer<MyEdge>(),
+);
+```
+
+Available `TopoDeviceType` values include `switch_`, `router`, `firewall`, `server`, `network` (cloud), and more — see the [topology_view_icons docs](https://pub.dev/packages/topology_view_icons).
+
+## Controlling the canvas
+
+Attach a `TopoCanvasController` to drive fit-view, reset-zoom, or refresh from outside the widget.
+
+```dart
+final controller = TopoCanvasController();
+
+// ...
+SwitchRelationView(
+  controller: controller,
+  switches: switches,
+  connections: connections,
+);
+
+// Later:
+controller.fitView();       // recenter + auto-zoom to content
+controller.resetZoom();     // snap back to 100%
+controller.refresh();       // recompute layout (e.g. after data change)
+```
+
+Dispose the controller when you own it: `controller.dispose()` in your `State.dispose`.
+
 ## Extending
 
 Implement one of:
@@ -72,7 +123,30 @@ Implement one of:
 - `EdgeRenderer<T>` — custom line, curve, or animated effect.
 - `GroupRenderer` — different boundary shape (rectangle, hull, etc.).
 
-See `example/lib/main.dart` tab 3 for a `_CircleNodeRenderer` custom node.
+Minimal custom node renderer:
+
+```dart
+class CircleNodeRenderer extends NodeRenderer<String> {
+  const CircleNodeRenderer();
+
+  @override
+  Size sizeFor(TopoNode<String> node) => const Size(60, 60);
+
+  @override
+  Widget build(BuildContext context, TopoNode<String> node, RenderContext rc) {
+    return Container(
+      width: 60, height: 60,
+      decoration: const BoxDecoration(
+        color: Colors.teal, shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(node.id, style: const TextStyle(color: Colors.white)),
+    );
+  }
+}
+```
+
+See `example/lib/main.dart` — six tabs demonstrate both presets, the raw canvas, an external controller, dynamic data mutation, and a hover-effect tuning panel.
 
 ## Migrating from legacy packages
 
