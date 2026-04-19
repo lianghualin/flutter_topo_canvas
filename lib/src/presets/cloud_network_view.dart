@@ -6,9 +6,10 @@ import '../layout/ellipse_group_layout.dart';
 import '../layout/hierarchical_layout.dart';
 import '../layout/topology_layout.dart';
 import '../renderers/animated_line_renderer.dart';
+import '../renderers/device_icon_node_renderer.dart';
 import '../renderers/ellipse_group_renderer.dart';
-import '../renderers/icon_node_renderer.dart';
 import 'preset_data.dart';
+import 'package:topology_view_icons/topology_view_icons.dart';
 
 /// Preset replacing `network_topoview.NetworkTopologyView`. Renders cloud-shaped
 /// network nodes grouped into domain ellipses.
@@ -76,12 +77,10 @@ class CloudNetworkView extends StatelessWidget {
       edges: edges,
       groups: showGroups ? groups : const [],
       layout: layout,
-      nodeRenderer: IconNodeRenderer<CloudNetwork>(
-        assetPath: (n) => n.data.isAbnormal
-            ? 'assets/images/network_cloud_abnormal.svg'
-            : 'assets/images/network_cloud_normal.svg',
+      nodeRenderer: DeviceIconNodeRenderer<CloudNetwork>(
+        deviceType: (_) => TopoDeviceType.network,
+        isError: (n) => n.data.isAbnormal,
         label: (n) => n.data.name,
-        package: 'flutter_topo_canvas',
         size: const Size(100, 60),
       ),
       edgeRenderer: const AnimatedLineRenderer<CloudEdge>(),

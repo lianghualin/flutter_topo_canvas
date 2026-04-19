@@ -14,8 +14,14 @@ export 'src/renderers/node_renderer.dart';
 export 'src/renderers/edge_renderer.dart';
 export 'src/renderers/group_renderer.dart';
 export 'src/renderers/icon_node_renderer.dart';
+export 'src/renderers/device_icon_node_renderer.dart';
 export 'src/renderers/animated_line_renderer.dart';
 export 'src/renderers/ellipse_group_renderer.dart';
+
+// Re-export the topology_view_icons enums so consumers don't need a second
+// import just to reference TopoDeviceType / TopoIconStyle in renderer args.
+export 'package:topology_view_icons/topology_view_icons.dart'
+    show TopoDeviceType, TopoIconStyle;
 
 export 'src/presets/preset_data.dart';
 export 'src/presets/cloud_network_view.dart';

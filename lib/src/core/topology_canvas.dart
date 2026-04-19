@@ -3,7 +3,6 @@ import '../layout/topology_layout.dart';
 import '../renderers/node_renderer.dart';
 import '../renderers/edge_renderer.dart';
 import '../renderers/group_renderer.dart';
-import '../util/svg_cache.dart';
 import '../util/viewport_math.dart';
 import 'topo_types.dart';
 import 'topo_controller.dart';
@@ -58,6 +57,11 @@ class TopologyCanvas<TNode, TEdge> extends StatefulWidget {
 class _TopologyCanvasState<TNode, TEdge>
     extends State<TopologyCanvas<TNode, TEdge>>
     with SingleTickerProviderStateMixin {
+  // The InteractiveViewer child is a 4000×4000 SizedBox; drawing happens in a
+  // sub-tree positioned at this offset so that negative-coordinate content
+  // still falls within the child. `_fitView` must compensate for this shift.
+  static const _innerOrigin = Offset(2000, 2000);
+
   Map<String, Offset> _positions = const {};
   late AnimationController _ticker;
   final TransformationController _xform = TransformationController();
@@ -77,7 +81,6 @@ class _TopologyCanvasState<TNode, TEdge>
       vsync: this,
     )..repeat();
     _runLayout();
-    SvgCache.preloadBuiltInAssets();
 
     _effectiveController.attachFitViewHandler(_fitView);
     _effectiveController.attachRefreshHandler(() => setState(_runLayout));
@@ -126,11 +129,15 @@ class _TopologyCanvasState<TNode, TEdge>
       contentSize: bounds.size,
       viewportSize: _lastViewport,
     );
-    final offset = fitViewOffset(
+    final baseOffset = fitViewOffset(
       contentBounds: bounds,
       viewportSize: _lastViewport,
       scale: scale,
     );
+    // Compensate for the inner-origin shift: nodes drawn at content-coord (px,py)
+    // land on the child at (_innerOrigin + (px,py)); the raw matrix translation
+    // must cancel out scale*_innerOrigin so content-centre maps to view-centre.
+    final offset = baseOffset - _innerOrigin * scale;
 
     _xform.value = Matrix4.identity()
       ..translateByDouble(offset.dx, offset.dy, 0, 1)
@@ -173,22 +180,17 @@ class _TopologyCanvasState<TNode, TEdge>
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                Positioned(
-                  left: 2000,
-                  top: 2000,
-                  child: SizedBox(
-                    width: 1,
-                    height: 1,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        _buildEdgeLayer(contentBounds, _lastViewport),
-                        _buildGroupLayer(contentBounds, _lastViewport),
-                        _buildNodeLayer(_lastViewport),
-                      ],
-                    ),
-                  ),
-                ),
+                // Each layer fills the 4000×4000 space so pointer events
+                // reach descendants at any in-bounds coordinate. Content
+                // positions are shifted by _innerOrigin *inside* each layer
+                // rather than via a wrapping Positioned, because a
+                // position-shifted wrapper with a small size silently drops
+                // hit-tests for pointers that fall outside its own rect.
+                Positioned.fill(
+                    child: _buildEdgeLayer(contentBounds, _lastViewport)),
+                Positioned.fill(
+                    child: _buildGroupLayer(contentBounds, _lastViewport)),
+                Positioned.fill(child: _buildNodeLayer(_lastViewport)),
               ],
             ),
           ),
@@ -219,6 +221,7 @@ class _TopologyCanvasState<TNode, TEdge>
             positions: _positions,
             renderer: widget.edgeRenderer,
             animationValue: _ticker.value,
+            originShift: _innerOrigin,
           ),
         );
       },
@@ -239,6 +242,7 @@ class _TopologyCanvasState<TNode, TEdge>
             n.id: widget.nodeRenderer.sizeFor(n),
         },
         renderer: widget.groupRenderer!,
+        originShift: _innerOrigin,
       ),
     );
   }
@@ -249,9 +253,11 @@ class _TopologyCanvasState<TNode, TEdge>
       children: [
         for (final node in widget.nodes)
           Positioned(
-            left: (_positions[node.id]?.dx ?? 0) -
+            left: _innerOrigin.dx +
+                (_positions[node.id]?.dx ?? 0) -
                 widget.nodeRenderer.sizeFor(node).width / 2,
-            top: (_positions[node.id]?.dy ?? 0) -
+            top: _innerOrigin.dy +
+                (_positions[node.id]?.dy ?? 0) -
                 widget.nodeRenderer.sizeFor(node).height / 2,
             child: GestureDetector(
               onTap: () => widget.onNodeTap?.call(node.id),
@@ -278,12 +284,14 @@ class _EdgePainter<T> extends CustomPainter {
   final Map<String, Offset> positions;
   final EdgeRenderer<T> renderer;
   final double animationValue;
+  final Offset originShift;
 
   _EdgePainter({
     required this.edges,
     required this.positions,
     required this.renderer,
     required this.animationValue,
+    required this.originShift,
   });
 
   @override
@@ -299,7 +307,7 @@ class _EdgePainter<T> extends CustomPainter {
       final from = positions[edge.fromNodeId];
       final to = positions[edge.toNodeId];
       if (from == null || to == null) continue;
-      renderer.paint(canvas, edge, from, to, rc);
+      renderer.paint(canvas, edge, from + originShift, to + originShift, rc);
     }
   }
 
@@ -314,12 +322,14 @@ class _GroupPainter extends CustomPainter {
   final Map<String, Offset> positions;
   final Map<String, Size> nodeSizes;
   final GroupRenderer renderer;
+  final Offset originShift;
 
   _GroupPainter({
     required this.groups,
     required this.positions,
     required this.nodeSizes,
     required this.renderer,
+    required this.originShift,
   });
 
   @override
@@ -338,7 +348,7 @@ class _GroupPainter extends CustomPainter {
       final size = nodeSizes[id] ?? const Size(80, 80);
       if (pos == null) continue;
       final nodeRect = Rect.fromCenter(
-        center: pos,
+        center: pos + originShift,
         width: size.width,
         height: size.height,
       );

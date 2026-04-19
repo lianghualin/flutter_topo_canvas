@@ -4,8 +4,9 @@ import '../core/topo_controller.dart';
 import '../core/topology_canvas.dart';
 import '../layout/hierarchical_layout.dart';
 import '../renderers/animated_line_renderer.dart';
-import '../renderers/icon_node_renderer.dart';
+import '../renderers/device_icon_node_renderer.dart';
 import 'preset_data.dart';
+import 'package:topology_view_icons/topology_view_icons.dart';
 
 /// Preset replacing `onenetwork_topoview.NetworkTopologyView`. Renders switches
 /// connected in a graph. Handles cycles via HierarchicalLayout.
@@ -54,12 +55,10 @@ class SwitchRelationView extends StatelessWidget {
       nodes: nodes,
       edges: edges,
       layout: HierarchicalLayout(rootNodeId: root),
-      nodeRenderer: IconNodeRenderer<SwitchNode>(
-        assetPath: (n) => n.data.isAbnormal
-            ? 'assets/images/switch_float_err.svg'
-            : 'assets/images/switch_float.svg',
+      nodeRenderer: DeviceIconNodeRenderer<SwitchNode>(
+        deviceType: (_) => TopoDeviceType.switch_,
+        isError: (n) => n.data.isAbnormal,
         label: (n) => n.data.name,
-        package: 'flutter_topo_canvas',
         hoverFloat: hoverFloat,
       ),
       edgeRenderer: AnimatedLineRenderer<SwitchEdge>(colorful: colorful),

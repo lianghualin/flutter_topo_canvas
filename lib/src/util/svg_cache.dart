@@ -34,20 +34,6 @@ class SvgCache {
     }
   }
 
-  /// Pre-warms the flutter_svg cache with built-in package assets. Called by
-  /// the canvas on first build.
-  static Future<void> preloadBuiltInAssets() async {
-    await preload(
-      [
-        'assets/images/network_cloud_normal.svg',
-        'assets/images/network_cloud_abnormal.svg',
-        'assets/images/switch_float.svg',
-        'assets/images/switch_float_err.svg',
-      ],
-      package: 'flutter_topo_canvas',
-    );
-  }
-
   /// Clears the internal preload set. Useful for tests.
   @visibleForTesting
   static void resetForTests() => _preloaded.clear();
