@@ -44,8 +44,8 @@ class DeviceIconNodeRenderer<T> extends NodeRenderer<T> {
     this.style = TopoIconStyle.lnm,
     this.hoverFloat = true,
     this.liftDistance = 2.0,
-    this.shadowBlur = 8.0,
-    this.shadowOffset = 4.0,
+    this.shadowBlur = 3.0,
+    this.shadowOffset = 0.0,
     this.shadowOpacity = 0.20,
     this.labelStyle,
   });

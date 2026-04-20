@@ -1,3 +1,8 @@
+## 1.1.1 — 2026-04-20
+
+**Changed**
+- `DeviceIconNodeRenderer` default `shadowBlur` lowered from `8.0` to `3.0` and default `shadowOffset` lowered from `4.0` to `0.0`. Hover drop-shadow is now a tight halo directly under the icon instead of a soft downward drop — feels less "floaty" at typical icon sizes. Pass explicit values to restore the old look.
+
 ## 1.1.0 — 2026-04-20
 
 **Added**

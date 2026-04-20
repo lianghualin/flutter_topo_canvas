@@ -89,8 +89,8 @@ TopologyCanvas<MyNode, MyEdge>(
     style:       TopoIconStyle.lnm,
     hoverFloat:    true,
     liftDistance:  2.0,   // px up on hover
-    shadowBlur:    8.0,   // sigma at peak
-    shadowOffset:  4.0,   // y-drop at peak
+    shadowBlur:    3.0,   // sigma at peak
+    shadowOffset:  0.0,   // y-drop at peak
     shadowOpacity: 0.20,  // at peak, linearly scaled by hover progress
     externalOpacity: 0.5, // override the fade amount if you like
   ),
