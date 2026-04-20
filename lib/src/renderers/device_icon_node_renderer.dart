@@ -18,6 +18,13 @@ class DeviceIconNodeRenderer<T> extends NodeRenderer<T> {
   final TopoDeviceType Function(TopoNode<T> node) deviceType;
   final bool Function(TopoNode<T> node) isError;
   final String Function(TopoNode<T> node) label;
+
+  /// Optional: when true for a node, the whole node (icon + label) is
+  /// rendered at [externalOpacity] to de-emphasize it. Useful for showing
+  /// context-only switches from neighbouring domains. Null = never external.
+  final bool Function(TopoNode<T> node)? isExternal;
+  final double externalOpacity;
+
   final Size size;
   final TopoIconStyle style;
   final bool hoverFloat;
@@ -31,6 +38,8 @@ class DeviceIconNodeRenderer<T> extends NodeRenderer<T> {
     required this.deviceType,
     required this.label,
     required this.isError,
+    this.isExternal,
+    this.externalOpacity = 0.5,
     this.size = const Size(80, 80),
     this.style = TopoIconStyle.lnm,
     this.hoverFloat = true,
@@ -46,7 +55,7 @@ class DeviceIconNodeRenderer<T> extends NodeRenderer<T> {
 
   @override
   Widget build(BuildContext context, TopoNode<T> node, RenderContext rc) {
-    return _DeviceIconNodeWidget(
+    final widget = _DeviceIconNodeWidget(
       deviceType: deviceType(node),
       isError: isError(node),
       label: label(node),
@@ -59,6 +68,10 @@ class DeviceIconNodeRenderer<T> extends NodeRenderer<T> {
       shadowOpacity: shadowOpacity,
       labelStyle: labelStyle,
     );
+    final external = isExternal?.call(node) ?? false;
+    return external
+        ? Opacity(opacity: externalOpacity, child: widget)
+        : widget;
   }
 }
 
@@ -138,13 +151,33 @@ class _DeviceIconNodeWidgetState extends State<_DeviceIconNodeWidget> {
                 ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              widget.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: widget.labelStyle ??
-                  const TextStyle(fontSize: 12, color: Colors.black87),
+            // Translucent plate keeps the label legible when an edge line
+            // passes through the label zone (edges run from node-centre to
+            // node-centre, so downlinks cross directly under the icon).
+            // The negative translate pulls the plate up into the icon's
+            // internal bottom padding so the label reads as part of the icon
+            // rather than floating below it. `height: 1.0` collapses the
+            // font's line-box whitespace.
+            Transform.translate(
+              offset: const Offset(0, -8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(255, 255, 255, 0.85),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: Text(
+                  widget.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: widget.labelStyle ??
+                      const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black87,
+                        height: 1.0,
+                      ),
+                ),
+              ),
             ),
           ],
         ),

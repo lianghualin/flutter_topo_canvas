@@ -122,7 +122,14 @@ class _TopologyCanvasState<TNode, TEdge>
   }
 
   void _fitView() {
-    final bounds = boundsOfPositions(_positions);
+    final bounds = contentBounds(
+      positions: _positions,
+      nodeSizes: {
+        for (final n in widget.nodes) n.id: widget.nodeRenderer.sizeFor(n),
+      },
+      groups: widget.groups,
+      groupRenderer: widget.groupRenderer,
+    );
     if (bounds == Rect.zero) return;
 
     final scale = fitViewScale(

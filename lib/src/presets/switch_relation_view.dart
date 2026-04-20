@@ -20,6 +20,7 @@ class SwitchRelationView extends StatelessWidget {
   final bool showToolbar;
   final List<Widget>? toolbarExtras;
   final TopoCanvasController? controller;
+  final Size iconSize;
 
   const SwitchRelationView({
     super.key,
@@ -32,6 +33,7 @@ class SwitchRelationView extends StatelessWidget {
     this.showToolbar = true,
     this.toolbarExtras,
     this.controller,
+    this.iconSize = const Size(60, 60),
   });
 
   @override
@@ -58,7 +60,9 @@ class SwitchRelationView extends StatelessWidget {
       nodeRenderer: DeviceIconNodeRenderer<SwitchNode>(
         deviceType: (_) => TopoDeviceType.switch_,
         isError: (n) => n.data.isAbnormal,
+        isExternal: (n) => n.data.isExternal,
         label: (n) => n.data.name,
+        size: iconSize,
         hoverFloat: hoverFloat,
       ),
       edgeRenderer: AnimatedLineRenderer<SwitchEdge>(colorful: colorful),

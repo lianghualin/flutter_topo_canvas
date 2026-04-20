@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_topo_canvas/src/core/topo_types.dart';
+import 'package:flutter_topo_canvas/src/renderers/group_renderer.dart';
 import 'package:flutter_topo_canvas/src/util/viewport_math.dart';
 
 void main() {
@@ -73,4 +75,85 @@ void main() {
       expect(clampScale(1.5, 0.1, 5.0), 1.5);
     });
   });
+
+  group('contentBounds', () {
+    test('returns Rect.zero for empty positions', () {
+      final r = contentBounds(
+        positions: const {},
+        nodeSizes: const {},
+        groups: const [],
+        groupRenderer: null,
+      );
+      expect(r, Rect.zero);
+    });
+
+    test('expands by each node half-size around its centre', () {
+      final r = contentBounds(
+        positions: const {
+          'a': Offset(0, 0),
+          'b': Offset(100, 0),
+        },
+        nodeSizes: const {
+          'a': Size(40, 40),
+          'b': Size(40, 40),
+        },
+        groups: const [],
+        groupRenderer: null,
+      );
+      // a covers (-20, -20, 40, 40); b covers (80, -20, 40, 40).
+      // Union: left=-20, top=-20, right=120, bottom=20.
+      expect(r, const Rect.fromLTRB(-20, -20, 120, 20));
+    });
+
+    test('includes group visualBounds when a group renderer is supplied', () {
+      final r = contentBounds(
+        positions: const {
+          'a': Offset(0, 0),
+          'b': Offset(100, 0),
+        },
+        nodeSizes: const {
+          'a': Size(40, 40),
+          'b': Size(40, 40),
+        },
+        groups: const [
+          TopoGroup(id: 'g', label: 'g', nodeIds: ['a', 'b']),
+        ],
+        groupRenderer: const _InflatingGroupRenderer(25),
+      );
+      // Node-union of a+b: (-20,-20,120,20). Inflated by 25 on every side:
+      // (-45,-45,145,45).
+      expect(r, const Rect.fromLTRB(-45, -45, 145, 45));
+    });
+
+    test('ignores groups when groupRenderer is null', () {
+      final r = contentBounds(
+        positions: const {
+          'a': Offset(0, 0),
+          'b': Offset(100, 0),
+        },
+        nodeSizes: const {
+          'a': Size(40, 40),
+          'b': Size(40, 40),
+        },
+        groups: const [
+          TopoGroup(id: 'g', label: 'g', nodeIds: ['a', 'b']),
+        ],
+        groupRenderer: null,
+      );
+      expect(r, const Rect.fromLTRB(-20, -20, 120, 20));
+    });
+  });
+}
+
+/// Test double: inflates node-union by [inflation] on all sides.
+class _InflatingGroupRenderer extends GroupRenderer {
+  final double inflation;
+  const _InflatingGroupRenderer(this.inflation);
+
+  @override
+  void paint(Canvas canvas, TopoGroup group, Rect bounds) {}
+
+  @override
+  Rect visualBounds(TopoGroup group, Rect nodeUnion) =>
+      nodeUnion.inflate(inflation);
 }

@@ -1,3 +1,18 @@
+## 1.1.0 — 2026-04-20
+
+**Added**
+- `iconSize` parameter on `CloudNetworkView` (default `Size(80, 48)`) and `SwitchRelationView` (default `Size(60, 60)`) for tuning icon size without dropping to the low-level canvas. Defaults are smaller than the previous internal constants — diagrams look tighter out of the box.
+- `isExternal` on `SwitchNode` and a matching `isExternal` predicate + `externalOpacity` on `DeviceIconNodeRenderer`. Switches flagged external render at 50% opacity to indicate they belong to a neighbouring domain shown for context only.
+- `GroupRenderer.visualBounds(group, nodeUnion)` — reports the rect the renderer actually paints. Default returns the input; `EllipseGroupRenderer` overrides it to account for its 40-px inflation.
+- `contentBounds(...)` helper in `viewport_math.dart`, unioning per-node rects with each group's `visualBounds`.
+
+**Changed**
+- Label under `DeviceIconNodeRenderer` now sits on a translucent white plate (85% opacity, rounded corners) and is pulled flush against the icon, so edge lines passing through the label zone no longer obscure the text.
+- Example app's Cloud network and Switch relation tabs now carry a live icon-size slider; Switch relation also has a `FilterChip` row to toggle `isExternal` per switch.
+
+**Fixed**
+- `fitView` now frames the full visual content — including group ellipses and node icon rects — instead of just node centre points. Previously the root ellipse in `CloudNetworkView` could be clipped and labels at the ellipse's horizontal edges could sit outside the ring after an auto-fit.
+
 ## 1.0.0 — 2026-04-19
 
 First public-quality release.

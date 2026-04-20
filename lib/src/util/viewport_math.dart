@@ -1,5 +1,56 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../core/topo_types.dart';
+import '../renderers/group_renderer.dart';
+
+/// Returns the full content-space bounding rect that fit-view should frame:
+/// the union of every node's rect (centre ± half size) with every group's
+/// [GroupRenderer.visualBounds]. This ensures groups whose renderer paints
+/// outside the node rect (e.g. the ellipse's 40 px inflation) are not clipped.
+///
+/// Returns [Rect.zero] when [positions] is empty.
+Rect contentBounds({
+  required Map<String, Offset> positions,
+  required Map<String, Size> nodeSizes,
+  required List<TopoGroup> groups,
+  required GroupRenderer? groupRenderer,
+}) {
+  if (positions.isEmpty) return Rect.zero;
+
+  Rect? acc;
+  Rect? rectForNode(String id) {
+    final pos = positions[id];
+    if (pos == null) return null;
+    final size = nodeSizes[id] ?? Size.zero;
+    return Rect.fromCenter(
+      center: pos,
+      width: size.width,
+      height: size.height,
+    );
+  }
+
+  for (final id in positions.keys) {
+    final r = rectForNode(id);
+    if (r == null) continue;
+    acc = acc?.expandToInclude(r) ?? r;
+  }
+
+  if (groupRenderer != null) {
+    for (final group in groups) {
+      Rect? union;
+      for (final id in group.nodeIds) {
+        final r = rectForNode(id);
+        if (r == null) continue;
+        union = union?.expandToInclude(r) ?? r;
+      }
+      if (union == null) continue;
+      final vb = groupRenderer.visualBounds(group, union);
+      acc = acc?.expandToInclude(vb) ?? vb;
+    }
+  }
+
+  return acc ?? Rect.zero;
+}
 
 /// Computes the axis-aligned bounding rectangle that encloses every offset in
 /// [positions]. Returns [Rect.zero] when empty.

@@ -55,65 +55,183 @@ class DemoHome extends StatelessWidget {
   }
 }
 
-class CloudNetworkDemo extends StatelessWidget {
+class CloudNetworkDemo extends StatefulWidget {
   const CloudNetworkDemo({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const CloudNetworkView(
-      domains: [
-        CloudDomain(
-          name: 'root',
-          isRoot: true,
-          networks: [
-            CloudNetwork(name: 'vpc-a'),
-            CloudNetwork(name: 'vpc-b'),
-            CloudNetwork(name: 'vpc-c', isAbnormal: true),
-          ],
-        ),
-        CloudDomain(
-          name: 'edge',
-          networks: [
-            CloudNetwork(name: 'edge-1'),
-            CloudNetwork(name: 'edge-2'),
-          ],
-        ),
+  State<CloudNetworkDemo> createState() => _CloudNetworkDemoState();
+}
+
+class _CloudNetworkDemoState extends State<CloudNetworkDemo> {
+  double _iconWidth = 80;
+
+  static const _aspect = 0.6;
+
+  static const _domains = [
+    CloudDomain(
+      name: 'root',
+      isRoot: true,
+      networks: [
+        CloudNetwork(name: 'vpc-a'),
+        CloudNetwork(name: 'vpc-b'),
+        CloudNetwork(name: 'vpc-c', isAbnormal: true),
       ],
-      connections: [
-        CloudEdge(fromNetworkName: 'vpc-a', toNetworkName: 'edge-1'),
-        CloudEdge(fromNetworkName: 'vpc-b', toNetworkName: 'edge-2'),
+    ),
+    CloudDomain(
+      name: 'edge',
+      networks: [
+        CloudNetwork(name: 'edge-1'),
+        CloudNetwork(name: 'edge-2'),
+      ],
+    ),
+  ];
+
+  static const _connections = [
+    CloudEdge(fromNetworkName: 'vpc-a', toNetworkName: 'edge-1'),
+    CloudEdge(fromNetworkName: 'vpc-b', toNetworkName: 'edge-2'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Material(
+          color: Theme.of(context).colorScheme.surface,
+          elevation: 1,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: _SliderRow(
+              label: 'Icon size',
+              value: _iconWidth,
+              min: 60,
+              max: 160,
+              divisions: 100,
+              display: (v) =>
+                  '${v.toStringAsFixed(0)}×${(v * _aspect).toStringAsFixed(0)} px',
+              onChanged: (v) => setState(() => _iconWidth = v),
+            ),
+          ),
+        ),
+        Expanded(
+          child: CloudNetworkView(
+            domains: _domains,
+            connections: _connections,
+            iconSize: Size(_iconWidth, _iconWidth * _aspect),
+          ),
+        ),
       ],
     );
   }
 }
 
-class SwitchRelationDemo extends StatelessWidget {
+class SwitchRelationDemo extends StatefulWidget {
   const SwitchRelationDemo({super.key});
 
   @override
+  State<SwitchRelationDemo> createState() => _SwitchRelationDemoState();
+}
+
+class _SwitchRelationDemoState extends State<SwitchRelationDemo> {
+  double _iconSize = 60;
+
+  // Names marked external render at 50% opacity to indicate they belong to
+  // a neighbouring domain shown for context only.
+  final Set<String> _external = {'core-2', 'tor-4'};
+
+  static const _baseSwitches = [
+    ('core-1', false),
+    ('core-2', false),
+    ('agg-1', false),
+    ('agg-2', false),
+    ('tor-1', false),
+    ('tor-2', false),
+    ('tor-err', true),
+    ('tor-4', false),
+  ];
+
+  static const _connections = [
+    SwitchEdge(fromSwitchName: 'core-1', toSwitchName: 'agg-1'),
+    SwitchEdge(fromSwitchName: 'core-2', toSwitchName: 'agg-2'),
+    SwitchEdge(fromSwitchName: 'agg-1', toSwitchName: 'tor-1'),
+    SwitchEdge(fromSwitchName: 'agg-1', toSwitchName: 'tor-2'),
+    SwitchEdge(fromSwitchName: 'agg-2', toSwitchName: 'tor-err'),
+    SwitchEdge(fromSwitchName: 'agg-2', toSwitchName: 'tor-4'),
+    SwitchEdge(fromSwitchName: 'tor-2', toSwitchName: 'core-1'),
+  ];
+
+  List<SwitchNode> get _switches => [
+        for (final (name, isAbnormal) in _baseSwitches)
+          SwitchNode(
+            name: name,
+            isAbnormal: isAbnormal,
+            isExternal: _external.contains(name),
+          ),
+      ];
+
+  @override
   Widget build(BuildContext context) {
-    return const SwitchRelationView(
-      switches: [
-        SwitchNode(name: 'core-1'),
-        SwitchNode(name: 'core-2'),
-        SwitchNode(name: 'agg-1'),
-        SwitchNode(name: 'agg-2'),
-        SwitchNode(name: 'tor-1'),
-        SwitchNode(name: 'tor-2'),
-        SwitchNode(name: 'tor-err', isAbnormal: true),
-        SwitchNode(name: 'tor-4'),
+    return Column(
+      children: [
+        Material(
+          color: Theme.of(context).colorScheme.surface,
+          elevation: 1,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SliderRow(
+                  label: 'Icon size',
+                  value: _iconSize,
+                  min: 32,
+                  max: 120,
+                  divisions: 88,
+                  display: (v) => '${v.toStringAsFixed(0)} px',
+                  onChanged: (v) => setState(() => _iconSize = v),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const SizedBox(
+                      width: 140,
+                      child: Text('External domain',
+                          style: TextStyle(fontWeight: FontWeight.w500)),
+                    ),
+                    Expanded(
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          for (final (name, _) in _baseSwitches)
+                            FilterChip(
+                              label: Text(name),
+                              selected: _external.contains(name),
+                              onSelected: (on) => setState(() {
+                                if (on) {
+                                  _external.add(name);
+                                } else {
+                                  _external.remove(name);
+                                }
+                              }),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: SwitchRelationView(
+            switches: _switches,
+            connections: _connections,
+            colorful: true,
+            iconSize: Size(_iconSize, _iconSize),
+          ),
+        ),
       ],
-      connections: [
-        SwitchEdge(fromSwitchName: 'core-1', toSwitchName: 'agg-1'),
-        SwitchEdge(fromSwitchName: 'core-2', toSwitchName: 'agg-2'),
-        SwitchEdge(fromSwitchName: 'agg-1', toSwitchName: 'tor-1'),
-        SwitchEdge(fromSwitchName: 'agg-1', toSwitchName: 'tor-2'),
-        SwitchEdge(fromSwitchName: 'agg-2', toSwitchName: 'tor-err'),
-        SwitchEdge(fromSwitchName: 'agg-2', toSwitchName: 'tor-4'),
-        // Back-edge exercising cycle handling:
-        SwitchEdge(fromSwitchName: 'tor-2', toSwitchName: 'core-1'),
-      ],
-      colorful: true,
     );
   }
 }

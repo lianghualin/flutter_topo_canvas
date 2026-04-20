@@ -24,6 +24,13 @@ class EllipseGroupRenderer extends GroupRenderer {
     ),
   });
 
+  /// Inflation applied to the node-union rect before drawing the ellipse.
+  static const _inflation = 40.0;
+
+  @override
+  Rect visualBounds(TopoGroup group, Rect nodeUnion) =>
+      nodeUnion.inflate(_inflation + strokeWidth / 2);
+
   @override
   void paint(Canvas canvas, TopoGroup group, Rect bounds) {
     final paint = Paint()
@@ -32,7 +39,7 @@ class EllipseGroupRenderer extends GroupRenderer {
       ..strokeWidth = strokeWidth;
 
     // Inflate slightly so the ellipse encloses the nodes rather than overlapping.
-    final inflated = bounds.inflate(40);
+    final inflated = bounds.inflate(_inflation);
     canvas.drawOval(inflated, paint);
 
     final tp = TextPainter(

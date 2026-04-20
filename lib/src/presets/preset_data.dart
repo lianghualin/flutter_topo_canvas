@@ -43,7 +43,16 @@ class SwitchNode {
   final String name;
   final bool isAbnormal;
 
-  const SwitchNode({required this.name, this.isAbnormal = false});
+  /// De-emphasizes the node visually (rendered at 50% opacity). Use for
+  /// switches that belong to a neighbouring domain and are shown for context
+  /// only — not the primary focus of the diagram.
+  final bool isExternal;
+
+  const SwitchNode({
+    required this.name,
+    this.isAbnormal = false,
+    this.isExternal = false,
+  });
 }
 
 @immutable

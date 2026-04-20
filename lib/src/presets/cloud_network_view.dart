@@ -21,6 +21,7 @@ class CloudNetworkView extends StatelessWidget {
   final bool showToolbar;
   final List<Widget>? toolbarExtras;
   final TopoCanvasController? controller;
+  final Size iconSize;
 
   const CloudNetworkView({
     super.key,
@@ -31,6 +32,7 @@ class CloudNetworkView extends StatelessWidget {
     this.showToolbar = true,
     this.toolbarExtras,
     this.controller,
+    this.iconSize = const Size(80, 48),
   });
 
   @override
@@ -81,7 +83,7 @@ class CloudNetworkView extends StatelessWidget {
         deviceType: (_) => TopoDeviceType.network,
         isError: (n) => n.data.isAbnormal,
         label: (n) => n.data.name,
-        size: const Size(100, 60),
+        size: iconSize,
       ),
       edgeRenderer: const AnimatedLineRenderer<CloudEdge>(),
       groupRenderer: showGroups ? const EllipseGroupRenderer() : null,
